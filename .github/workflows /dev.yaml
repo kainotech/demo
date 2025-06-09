@@ -1,0 +1,36 @@
+name: Deploy To DEV
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: copy file via ssh
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.HOST_DNS }}
+          username: ${{ vars.HOST_USER_NAME }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          port: 22
+          source: "."
+          target: "/home/ubuntu/api"
+
+      - name: Install dependency & deploye backend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.HOST_DNS }}
+          username: ${{ vars.HOST_USER_NAME  }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/api
+            ls
+            sudo sudo docker-compose build
+            sudo sudo docker-compose down
+            sudo sudo docker-compose up -d
+            sudo docker system prune -f
